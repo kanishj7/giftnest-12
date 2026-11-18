@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GiftNest - The Curated Gift Shelf</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #fdf8f5;
+            color: #3d242a;
+        }
+
+        header {
+            background: #4a2531;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 35px 15px;
+        }
+
+        .search-box {
+            background: white;
+            padding: 25px;
+            margin: 15px auto;
+            width: 80%;
+            max-width: 450px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px #e6d5ce;
+        }
+
+        input {
+            padding: 12px;
+            width: 65%;
+            border: 1px solid #ccaeb6;
+            border-radius: 7px;
+        }
+
+        button {
+            padding: 12px;
+            background: #6d3849;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #3d1d27;
+        }
+
+        #results {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .gift {
+            background: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px #e6d5ce;
+        }
+
+        .gift-card-art {
+            height: 150px;
+            width: 100%;
+            border-radius: 8px;
+            background: #f3e4dc;
+            border: 1px dashed rgba(61, 36, 42, 0.18);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        .gift-card-art .emoji {
+            font-size: 46px;
+            line-height: 1;
+        }
+
+        .gift-card-art .cat-tag {
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #4a2531;
+        }
+
+        #message {
+            text-align: center;
+            padding: 10px;
+        }
+
+        footer {
+            background: #4a2531;
+            color: white;
+            text-align: center;
+            padding: 15px;
+        }
+
+        @media(max-width: 700px) {
+            #results {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media(max-width: 450px) {
+            #results {
+                grid-template-columns: 1fr;
+            }
+
+            input {
+                width: 90%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🎁 GiftNest</h1>
+    <p>Your Gateway to Thoughtful Gifting</p>
+</header>
+
+<section class="hero">
+    <h2>Find Your Next Great Gift</h2>
+    <p>Search, discover and explore unique gifts from our curated catalogue.</p>
+
+    <div class="search-box">
+        <h3>Explore the Catalogue</h3>
+
+        <input type="text" id="giftInput"
+               placeholder="Enter gift item (e.g. watch, mug, perfume)">
+
+        <button type="button" onclick="searchGifts()">Search</button>
+    </div>
+</section>
+
+<p id="message">Search for a gift to get started (try "watch", "bag", or "perfume").</p>
+
+<div id="results"></div>
+
+<footer>
+    <p>© 2026 GiftNest | Curated Gifting Store</p>
+</footer>
+
+<script>
+
+    function getCategoryVisual(categoryText) {
+        const cat = (categoryText || "").toLowerCase();
+        if (cat.includes("watch")) return { emoji: "⌚", bg: "#fbe6d4" };
+        if (cat.includes("fragrance") || cat.includes("perfume")) return { emoji: "🌸", bg: "#fce8ec" };
+        if (cat.includes("bag")) return { emoji: "👜", bg: "#efe5dc" };
+        if (cat.includes("skin") || cat.includes("beauty")) return { emoji: "🕯️", bg: "#f8ebe4" };
+        if (cat.includes("home") || cat.includes("decor") || cat.includes("kitchen")) return { emoji: "🏺", bg: "#e3efe6" };
+        return { emoji: "🎁", bg: "#f3e4dc" };
+    }
+
+    // Function to search gifts using DummyJSON Products REST API
+    function searchGifts() {
+
+        let giftName = document.getElementById("giftInput").value.trim();
+        let results = document.getElementById("results");
+        let message = document.getElementById("message");
+
+        // Input validation
+        if (giftName === "") {
+            message.innerText = "Please enter a gift item name.";
+            results.innerHTML = "";
+            return;
+        }
+
+        message.innerText = "Searching for gifts...";
+        results.innerHTML = "";
+
+        // REST API call using Fetch
+        fetch("https://dummyjson.com/products/search?q=" +
+              encodeURIComponent(giftName))
+
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Unable to connect to API");
+            }
+            return response.json();
+        })
+
+        .then(data => {
+
+            let gifts = data.products.slice(0, 6);
+
+            if (gifts.length === 0) {
+                message.innerText = "No gifts found. Try searching 'watch', 'perfume', or 'bag'.";
+                return;
+            }
+
+            message.innerText = "Gifts found successfully!";
+
+            // Process and display API data
+            gifts.forEach(gift => {
+
+                let title = gift.title || "Curated Gift";
+
+                let category = gift.category ?
+                    gift.category : "General";
+
+                let price = gift.price ?
+                    "₹" + Math.round(gift.price * 85) : "Price on request";
+
+                let visual = getCategoryVisual(category);
+
+                results.innerHTML += `
+                    <div class="gift">
+                        <div class="gift-card-art" style="background: ${visual.bg};">
+                            <span class="emoji">${visual.emoji}</span>
+                            <span class="cat-tag">${category}</span>
+                        </div>
+                        <h3>${title}</h3>
+                        <p>Category: ${category}</p>
+                        <p><b>${price}</b></p>
+                    </div>
+                `;
+            });
+
+        })
+
+        // Error handling and debugging
+        .catch(error => {
+            message.innerText = "Something went wrong. Please try again.";
+            console.log("API Error:", error);
+        });
+    }
+
+</script>
+
+</body>
+</html>
